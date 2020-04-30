@@ -36,12 +36,11 @@ def detect_motion(frameCount):
             "%A %d %B %Y %I:%M:%S%p"), (10, frame.shape[0] - 10),
             cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
 
+        # Detect motion after a background is established
         if total_frames > frameCount:
-            # Detect motion
             motion = md.detect(gray_image)
             if motion is not None:
-                # unpack the tuple and draw the box surrounding the
-                # "motion area" on the output frame
+                # Draw a rectangle around the area of motion
                 (minX, minY, maxX, maxY) = motion
                 cv2.rectangle(frame, (minX, minY), (maxX, maxY), (0, 0, 255), 2)
         else:
@@ -82,11 +81,11 @@ def generate():
         if not flag:
             continue
 
-        # Yield a byte array of the output frame
-        yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + 
-            bytearray(encodedImage) + b'\r\n')
+        # Yield a byte array of the .jpg frame
+        yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encodedImage) + b'\r\n')
 
 
+# Generate object for web application
 @app.route("/video_feed")
 def video_feed():
     # Return the generated response and media type
@@ -94,19 +93,16 @@ def video_feed():
         mimetype = "multipart/x-mixed-replace; boundary=frame")
 
 
-# Begin program
-if __name__ == '__main__':
+# main
+def main():
     # Parse command line arguments
     ap = argparse.ArgumentParser()
-    ap.add_argument("-i", "--ip", type=str, required=True,
-        help="ip address of the device")
-    ap.add_argument("-o", "--port", type=int, required=True,
-        help="ephemeral port number of the server (1024 to 65535)")
-    ap.add_argument("-f", "--frame-count", type=int, default=32,
-        help="# of frames used to construct the background model")
+    ap.add_argument("-i", "--ip", type=str, required=True, help="ip address of the device")
+    ap.add_argument("-o", "--port", type=int, required=True, help="ephemeral port number of the server (1024 to 65535)")
+    ap.add_argument("-f", "--frame-count", type=int, default=32, help="# of frames used to construct the background model")
     args = vars(ap.parse_args())
 
-    # Start a thread that will perform motion detection
+    # Start thread to perform motion detection on the video feed
     detection_thread = threading.Thread(target=detect_motion, args=(args["frame_count"],))
     #t.daemon = True # NOTE try without
     detection_thread.start()
@@ -114,4 +110,9 @@ if __name__ == '__main__':
     # Start the flask app
     app.run(host=args["ip"], port=args["port"], debug=True,
         threaded=True, use_reloader=False)
+
+
+# Begin program
+if __name__ == '__main__':
+    main()
 
