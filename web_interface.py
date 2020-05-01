@@ -53,12 +53,12 @@ def detect_motion(frameCount):
         with frameLock:
             outputFrame = frame.copy()
 
-        # @NOTE: may cause issue if running in thread
+        """# @NOTE: may cause issue if running in thread
         # Cleanup and exit if 'q' is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
             videoFeed.release()
             cv2.destroyAllWindows()
-            break
+            break"""
 
 
 # Generate a jpg file of the image and format into a byte array
@@ -69,7 +69,7 @@ def generate():
     # Loop over frames from the output stream
     while True:
         # Wait until the lock is acquired
-        with lock:
+        with frameLock:
             if outputFrame is None:
                 continue
 
